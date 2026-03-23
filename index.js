@@ -22,6 +22,10 @@ const texts = {
     language_changed: "✅ Language changed to English!",
     language_selected: "Language selected",
     not_joined: "❌ You haven't joined the channel yet. Please join first!",
+    language_button: "🌍 Change Language",
+    premium_button: "💳 Get Premium",
+    help_button: "ℹ️ Help",
+    main_menu: "Main Menu:",
   },
   ru: {
     start: "Добро пожаловать! Пожалуйста, выберите язык:",
@@ -36,6 +40,10 @@ const texts = {
     language_changed: "✅ Язык изменен на Русский!",
     language_selected: "Язык выбран",
     not_joined: "❌ Вы еще не подписались на канал. Пожалуйста, подпишитесь!",
+    language_button: "🌍 Сменить язык",
+    premium_button: "💳 Получить Premium",
+    help_button: "ℹ️ Помощь",
+    main_menu: "Главное меню:",
   },
   uz: {
     start: "Xush kelibsiz! Iltimos, tilni tanlang:",
@@ -51,6 +59,10 @@ const texts = {
     language_selected: "Til tanlandi",
     not_joined:
       "❌ Siz hali kanalga obuna bo‘lmagansiz. Iltimos, avval obuna bo‘ling!",
+    language_button: "🌍 Tilni o‘zgartirish",
+    premium_button: "💳 Premium olish",
+    help_button: "ℹ️ Yordam",
+    main_menu: "Asosiy menyu:",
   },
 };
 
@@ -91,6 +103,15 @@ function getJoinKeyboard(userId) {
   ]);
 }
 
+// Show main menu keyboard
+function getMainMenuKeyboard(userId) {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback(t(userId, "language_button"), "show_language")],
+    [Markup.button.callback(t(userId, "premium_button"), "show_premium")],
+    [Markup.button.callback(t(userId, "help_button"), "show_help")],
+  ]);
+}
+
 // 🚀 START command - exact flow
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
@@ -121,7 +142,7 @@ bot.start(async (ctx) => {
     "🔓 " + t(userId, "payment_button") + ":",
     getPaymentKeyboard(userId),
   );
-  await ctx.reply(t(userId, "help"));
+  await ctx.reply(t(userId, "main_menu"), getMainMenuKeyboard(userId));
 });
 
 // 🌐 Language selection handler
@@ -148,7 +169,7 @@ bot.action(/lang_(en|ru|uz)/, async (ctx) => {
     "🔓 " + t(userId, "payment_button") + ":",
     getPaymentKeyboard(userId),
   );
-  await ctx.reply(t(userId, "help"));
+  await ctx.reply(t(userId, "main_menu"), getMainMenuKeyboard(userId));
 });
 
 // 🔁 Check join button handler
@@ -164,10 +185,35 @@ bot.action("check_join", async (ctx) => {
       "🔓 " + t(userId, "payment_button") + ":",
       getPaymentKeyboard(userId),
     );
-    await ctx.reply(t(userId, "help"));
+    await ctx.reply(t(userId, "main_menu"), getMainMenuKeyboard(userId));
   } else {
     await ctx.answerCbQuery(t(userId, "not_joined"), { show_alert: true });
   }
+});
+
+// Main menu actions
+bot.action("show_language", async (ctx) => {
+  const userId = ctx.from.id;
+  await ctx.editMessageText(t(userId, "start"));
+  await ctx.editMessageReplyMarkup({
+    inline_keyboard: [
+      [Markup.button.callback("🇺🇸 English", "lang_en")],
+      [Markup.button.callback("🇷🇺 Русский", "lang_ru")],
+      [Markup.button.callback("🇺🇿 O‘zbek", "lang_uz")],
+    ]
+  });
+});
+
+bot.action("show_premium", async (ctx) => {
+  const userId = ctx.from.id;
+  await ctx.editMessageText("🔓 " + t(userId, "payment_button") + ":");
+  await ctx.editMessageReplyMarkup(getPaymentKeyboard(userId));
+});
+
+bot.action("show_help", async (ctx) => {
+  const userId = ctx.from.id;
+  await ctx.editMessageText(t(userId, "help"));
+  await ctx.editMessageReplyMarkup(getMainMenuKeyboard(userId));
 });
 
 // 📝 Language command to change language anytime
@@ -217,11 +263,7 @@ bot.command("help", async (ctx) => {
     return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
   }
 
-  await ctx.reply(t(userId, "help"));
-  await ctx.reply(
-    "🔓 " + t(userId, "payment_button") + ":",
-    getPaymentKeyboard(userId),
-  );
+  await ctx.reply(t(userId, "main_menu"), getMainMenuKeyboard(userId));
 });
 
 // Error handling
