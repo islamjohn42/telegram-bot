@@ -11,12 +11,13 @@ const users = {};
 const texts = {
   en: {
     start: "Welcome! Please choose your language:",
-    already_joined: "✅ You can now use the bot!",
+    already_joined: "✅ You are now a member!",
     join_required: "❌ Please join our channel first to use this bot!",
-    joined_success: "✅ Thank you for joining! You can now use the bot.",
+    joined_success: "✅ Thank you for joining!",
     check_button: "✅ Check Membership",
     join_button: "📢 Join Channel",
-    buy_command: "❌ This command is not available",
+    payment_button: "💳 Get Premium Access",
+    payment_link: "https://islamjohn42.github.io/hujayoroff/",
     premium_not_available: "Premium features are currently not available",
     help: "Available commands:\n/start - Start the bot\n/language - Change language\n/help - Show this help message",
     language_changed: "✅ Language changed to English!",
@@ -25,13 +26,13 @@ const texts = {
   },
   ru: {
     start: "Добро пожаловать! Пожалуйста, выберите язык:",
-    already_joined: "✅ Теперь вы можете пользоваться ботом!",
+    already_joined: "✅ Вы теперь участник!",
     join_required: "❌ Пожалуйста, сначала подпишитесь на наш канал!",
-    joined_success:
-      "✅ Спасибо за подписку! Теперь вы можете пользоваться ботом.",
+    joined_success: "✅ Спасибо за подписку!",
     check_button: "✅ Проверить подписку",
     join_button: "📢 Подписаться",
-    buy_command: "❌ Эта команда недоступна",
+    payment_button: "💳 Получить Premium доступ",
+    payment_link: "https://islamjohn42.github.io/hujayoroff/",
     premium_not_available: "Премиум функции временно недоступны",
     help: "Доступные команды:\n/start - Запустить бота\n/language - Сменить язык\n/help - Показать это сообщение",
     language_changed: "✅ Язык изменен на Русский!",
@@ -40,13 +41,13 @@ const texts = {
   },
   uz: {
     start: "Xush kelibsiz! Iltimos, tilni tanlang:",
-    already_joined: "✅ Endi botdan foydalanishingiz mumkin!",
+    already_joined: "✅ Siz endi a'zosiz!",
     join_required: "❌ Iltimos, avval kanalga obuna bo‘ling!",
-    joined_success:
-      "✅ Obuna bo‘lganingiz uchun rahmat! Endi botdan foydalanishingiz mumkin.",
+    joined_success: "✅ Obuna bo‘lganingiz uchun rahmat!",
     check_button: "✅ Obunani tekshirish",
     join_button: "📢 Kanalga obuna bo‘lish",
-    buy_command: "❌ Bu buyruq mavjud emas",
+    payment_button: "💳 Premium a'zolik olish",
+    payment_link: "https://islamjohn42.github.io/hujayoroff/",
     premium_not_available: "Premium funksiyalar hozircha mavjud emas",
     help: "Mavjud buyruqlar:\n/start - Botni ishga tushirish\n/language - Tilni o‘zgartirish\n/help - Yordam xabarini ko‘rsatish",
     language_changed: "✅ Til O‘zbek tiliga o‘zgartirildi!",
@@ -70,6 +71,13 @@ async function isJoined(ctx) {
     console.error("Error checking membership:", error);
     return false;
   }
+}
+
+// Show payment button to user
+function getPaymentKeyboard(userId) {
+  return Markup.inlineKeyboard([
+    [Markup.button.url(t(userId, "payment_button"), t(userId, "payment_link"))],
+  ]);
 }
 
 // 🔒 Middleware to check membership for protected commands
@@ -128,7 +136,9 @@ bot.start(async (ctx) => {
     return ctx.reply(t(userId, "join_required"), keyboard);
   }
 
+  // User is joined, show welcome message with payment button
   await ctx.reply(t(userId, "already_joined"));
+  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
   await ctx.reply(t(userId, "help"));
 });
 
@@ -161,6 +171,7 @@ bot.action(/lang_(en|ru|uz)/, async (ctx) => {
 
   await ctx.reply(t(userId, "language_changed"));
   await ctx.reply(t(userId, "already_joined"));
+  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
 });
 
 // 🔁 Check join button handler
@@ -171,6 +182,8 @@ bot.action("check_join", async (ctx) => {
   if (joined) {
     await ctx.answerCbQuery(t(userId, "joined_success"));
     await ctx.reply(t(userId, "joined_success"));
+    // After successful join, show payment button immediately
+    await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
     await ctx.reply(t(userId, "help"));
   } else {
     await ctx.answerCbQuery(t(userId, "not_joined"), { show_alert: true });
@@ -191,12 +204,15 @@ bot.command("language", async (ctx) => {
 
 // ℹ️ Help command
 bot.command("help", requireJoin, async (ctx) => {
-  await ctx.reply(t(ctx.from.id, "help"));
+  const userId = ctx.from.id;
+  await ctx.reply(t(userId, "help"));
+  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
 });
 
-// ❌ Remove payment-related command
-bot.command("buy", requireJoin, async (ctx) => {
-  await ctx.reply(t(ctx.from.id, "premium_not_available"));
+// 💳 Payment command - shows the payment link button
+bot.command("premium", requireJoin, async (ctx) => {
+  const userId = ctx.from.id;
+  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
 });
 
 // 🏠 Home/Start alias
@@ -224,6 +240,7 @@ bot.command("home", async (ctx) => {
   }
 
   await ctx.reply(t(userId, "already_joined"));
+  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
   await ctx.reply(t(userId, "help"));
 });
 
