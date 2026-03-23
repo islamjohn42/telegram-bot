@@ -16,8 +16,8 @@ const texts = {
     joined_success: "✅ You have successfully joined!",
     check_button: "✅ I Joined",
     join_button: "📢 Join Channel",
-    payment_button: "💳 Buy Premium Access",
-    payment_link: "https://islamjohn42.github.io/hujayoroff/",
+    payment_button: "💳 Premium Access",
+    payment_details: "💳 *Payment Details:*\n\n💳 *Card:* `0000000000000001`\n👤 *Name:* ISLOMBEK NUMANOV\n💰 *Price:* 4,990 RUB / 559,000 UZS\n\n📸 *Please make the payment and send a photo of the receipt.*\n_(PDF files are not accepted. Screenshot only.)_\n\n✅ After payment, send the screenshot here and wait for confirmation.",
     help: "📋 *Available Features:*\n\n✅ Join channel to unlock access\n💳 Get premium access for exclusive content\n🌍 Change language anytime\n\n*Commands:*\nUse the buttons below to navigate\n\n📱 *Contact:* @hujayoroffit",
     language_changed: "✅ Language changed to English!",
     language_selected: "Language selected",
@@ -26,6 +26,8 @@ const texts = {
     premium_button: "💳 Premium Access",
     help_button: "ℹ️ Help",
     menu_button: "🏠 Main Menu",
+    send_receipt: "📸 Please send your payment receipt (screenshot)",
+    receipt_received: "✅ Receipt received! Our team will verify your payment shortly.",
   },
   ru: {
     start: "Добро пожаловать! Пожалуйста, выберите язык:",
@@ -34,8 +36,8 @@ const texts = {
     joined_success: "✅ Вы успешно подписались!",
     check_button: "✅ Я подписался",
     join_button: "📢 Подписаться на канал",
-    payment_button: "💳 Купить Premium доступ",
-    payment_link: "https://islamjohn42.github.io/hujayoroff/",
+    payment_button: "💳 Premium доступ",
+    payment_details: "💳 *Платежные реквизиты:*\n\n💳 *Карта:* `0000000000000001`\n👤 *Имя:* ISLOMBEK NUMANOV\n💰 *Цена:* 4,990 RUB / 559,000 UZS\n\n📸 *Пожалуйста, оплатите и отправьте фото чека.*\n_(PDF файлы не принимаются. Только скриншот.)_\n\n✅ После оплаты отправьте скриншот сюда и дождитесь подтверждения.",
     help: "📋 *Доступные функции:*\n\n✅ Подпишитесь на канал для доступа\n💳 Получите premium доступ для эксклюзивного контента\n🌍 Измените язык в любое время\n\n*Команды:*\nИспользуйте кнопки ниже для навигации\n\n📱 *Контакты:* @hujayoroffit",
     language_changed: "✅ Язык изменен на Русский!",
     language_selected: "Язык выбран",
@@ -44,6 +46,8 @@ const texts = {
     premium_button: "💳 Premium доступ",
     help_button: "ℹ️ Помощь",
     menu_button: "🏠 Главное меню",
+    send_receipt: "📸 Пожалуйста, отправьте чек об оплате (скриншот)",
+    receipt_received: "✅ Чек получен! Наша команда проверит вашу оплату в ближайшее время.",
   },
   uz: {
     start: "Xush kelibsiz! Iltimos, tilni tanlang:",
@@ -52,8 +56,8 @@ const texts = {
     joined_success: "✅ Siz muvaffaqiyatli obuna bo‘ldingiz!",
     check_button: "✅ Obuna bo‘ldim",
     join_button: "📢 Kanalga obuna bo‘lish",
-    payment_button: "💳 Premium a'zolik olish",
-    payment_link: "https://islamjohn42.github.io/hujayoroff/",
+    payment_button: "💳 Premium olish",
+    payment_details: "💳 *To‘lov ma'lumotlari:*\n\n💳 *Karta:* `0000000000000001`\n👤 *Ism:* ISLOMBEK NUMANOV\n💰 *Narx:* 4,990 RUB / 559,000 UZS\n\n📸 *Iltimos, to‘lovni amalga oshiring va chek fotosuratini yuboring.*\n_(PDF fayllar qabul qilinmaydi. Faqat skrinshot.)_\n\n✅ To‘lovdan so‘ng skrinshotni shu yerga yuboring va tasdiqlanishni kuting.",
     help: "📋 *Mavjud funksiyalar:*\n\n✅ Foydalanish uchun kanalga obuna bo‘ling\n💳 Eksklyuziv kontent uchun premium a'zolik oling\n🌍 Tilni istalgan vaqtda o‘zgartiring\n\n*Buyruqlar:*\nNavigatsiya uchun pastdagi tugmalardan foydalaning\n\n📱 *Kontakt:* @hujayoroffit",
     language_changed: "✅ Til O‘zbek tiliga o‘zgartirildi!",
     language_selected: "Til tanlandi",
@@ -63,6 +67,8 @@ const texts = {
     premium_button: "💳 Premium olish",
     help_button: "ℹ️ Yordam",
     menu_button: "🏠 Asosiy menyu",
+    send_receipt: "📸 Iltimos, to‘lov chekini yuboring (skrinshot)",
+    receipt_received: "✅ Chek qabul qilindi! Tez orada xodimlarimiz to‘lovni tekshirishadi.",
   },
 };
 
@@ -83,10 +89,9 @@ async function isJoined(ctx) {
   }
 }
 
-// Show payment button with menu button
+// Show payment details with menu button
 function getPaymentKeyboard(userId) {
   return Markup.inlineKeyboard([
-    [Markup.button.url(t(userId, "payment_button"), t(userId, "payment_link"))],
     [Markup.button.callback(t(userId, "menu_button"), "main_menu")],
   ]);
 }
@@ -264,17 +269,23 @@ bot.action("show_language", async (ctx) => {
   }
 });
 
-// Show premium menu
+// Show premium menu with payment details
 bot.action("show_premium", async (ctx) => {
   const userId = ctx.from.id;
   await ctx.answerCbQuery();
   
+  const paymentText = t(userId, "payment_details");
+  
   try {
-    await ctx.editMessageText("🔓 " + t(userId, "payment_button") + ":", {
+    await ctx.editMessageText(paymentText, {
+      parse_mode: "Markdown",
       reply_markup: getPaymentKeyboard(userId).reply_markup
     });
   } catch (error) {
-    await ctx.reply("🔓 " + t(userId, "payment_button") + ":", getPaymentKeyboard(userId));
+    await ctx.reply(paymentText, {
+      parse_mode: "Markdown",
+      ...getPaymentKeyboard(userId),
+    });
   }
 });
 
@@ -297,7 +308,67 @@ bot.action("show_help", async (ctx) => {
   }
 });
 
-// 💳 Premium command - kept for compatibility but shows menu
+// Handle payment receipt (photos)
+bot.on("photo", async (ctx) => {
+  const userId = ctx.from.id;
+  
+  // Check if user has selected language
+  if (!users[userId]) {
+    return ctx.reply("Please use /start first to set your language.", getLanguageKeyboard());
+  }
+  
+  // Check if user is a member of the channel
+  const joined = await isJoined(ctx);
+  if (!joined) {
+    return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
+  }
+  
+  // Get the largest photo
+  const photo = ctx.message.photo[ctx.message.photo.length - 1];
+  const fileId = photo.file_id;
+  
+  // Here you can forward the photo to an admin or save it
+  // For now, just acknowledge receipt
+  await ctx.reply(t(userId, "receipt_received"));
+  
+  // Optional: Forward to admin channel or group
+  // await ctx.telegram.sendPhoto(ADMIN_CHAT_ID, fileId, {
+  //   caption: `New payment receipt from @${ctx.from.username || ctx.from.first_name}\nUser ID: ${userId}`,
+  //   reply_markup: Markup.inlineKeyboard([
+  //     [Markup.button.callback("✅ Approve", `approve_${userId}`)],
+  //     [Markup.button.callback("❌ Reject", `reject_${userId}`)]
+  //   ])
+  // });
+  
+  console.log(`📸 Receipt received from user ${userId} (${ctx.from.first_name})`);
+});
+
+// Handle document (PDF) files - reject them
+bot.on("document", async (ctx) => {
+  const userId = ctx.from.id;
+  
+  // Check if user has selected language
+  if (!users[userId]) {
+    return ctx.reply("Please use /start first to set your language.", getLanguageKeyboard());
+  }
+  
+  // Check if user is a member of the channel
+  const joined = await isJoined(ctx);
+  if (!joined) {
+    return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
+  }
+  
+  // Reject PDF files
+  const document = ctx.message.document;
+  if (document.mime_type === "application/pdf") {
+    await ctx.reply("❌ " + t(userId, "payment_details").split("\n")[0] + "\n\n❌ PDF files are not accepted. Please send a screenshot (photo) instead.");
+  } else {
+    // If it's another type of document, also reject
+    await ctx.reply("❌ Please send a photo (screenshot) of your payment receipt, not a document file.");
+  }
+});
+
+// 💳 Premium command - kept for compatibility but shows payment details
 bot.command("premium", async (ctx) => {
   const userId = ctx.from.id;
 
@@ -311,7 +382,10 @@ bot.command("premium", async (ctx) => {
     return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
   }
 
-  await ctx.reply("🔓 " + t(userId, "payment_button") + ":", getPaymentKeyboard(userId));
+  await ctx.reply(t(userId, "payment_details"), {
+    parse_mode: "Markdown",
+    ...getPaymentKeyboard(userId),
+  });
 });
 
 // ℹ️ Help command - kept for compatibility but shows menu
