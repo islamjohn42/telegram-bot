@@ -18,7 +18,7 @@ const texts = {
     join_button: "📢 Join Channel",
     payment_button: "💳 Buy Premium Access",
     payment_link: "https://islamjohn42.github.io/hujayoroff/",
-    help: "📋 *Available Features:*\n\n✅ Join channel to unlock access\n💳 Get premium access for exclusive content\n🌍 Change language anytime\n\n*Commands:*\nUse the buttons below to navigate",
+    help: "📋 *Available Features:*\n\n✅ Join channel to unlock access\n💳 Get premium access for exclusive content\n🌍 Change language anytime\n\n*Commands:*\nUse the buttons below to navigate\n\n📱 *Contact:* @hujayoroffit",
     language_changed: "✅ Language changed to English!",
     language_selected: "Language selected",
     not_joined: "❌ You haven't joined the channel yet. Please join first!",
@@ -36,7 +36,7 @@ const texts = {
     join_button: "📢 Подписаться на канал",
     payment_button: "💳 Купить Premium доступ",
     payment_link: "https://islamjohn42.github.io/hujayoroff/",
-    help: "📋 *Доступные функции:*\n\n✅ Подпишитесь на канал для доступа\n💳 Получите premium доступ для эксклюзивного контента\n🌍 Измените язык в любое время\n\n*Команды:*\nИспользуйте кнопки ниже для навигации",
+    help: "📋 *Доступные функции:*\n\n✅ Подпишитесь на канал для доступа\n💳 Получите premium доступ для эксклюзивного контента\n🌍 Измените язык в любое время\n\n*Команды:*\nИспользуйте кнопки ниже для навигации\n\n📱 *Контакты:* @hujayoroffit",
     language_changed: "✅ Язык изменен на Русский!",
     language_selected: "Язык выбран",
     not_joined: "❌ Вы еще не подписались на канал. Пожалуйста, подпишитесь!",
@@ -54,7 +54,7 @@ const texts = {
     join_button: "📢 Kanalga obuna bo‘lish",
     payment_button: "💳 Premium a'zolik olish",
     payment_link: "https://islamjohn42.github.io/hujayoroff/",
-    help: "📋 *Mavjud funksiyalar:*\n\n✅ Foydalanish uchun kanalga obuna bo‘ling\n💳 Eksklyuziv kontent uchun premium a'zolik oling\n🌍 Tilni istalgan vaqtda o‘zgartiring\n\n*Buyruqlar:*\nNavigatsiya uchun pastdagi tugmalardan foydalaning",
+    help: "📋 *Mavjud funksiyalar:*\n\n✅ Foydalanish uchun kanalga obuna bo‘ling\n💳 Eksklyuziv kontent uchun premium a'zolik oling\n🌍 Tilni istalgan vaqtda o‘zgartiring\n\n*Buyruqlar:*\nNavigatsiya uchun pastdagi tugmalardan foydalaning\n\n📱 *Kontakt:* @hujayoroffit",
     language_changed: "✅ Til O‘zbek tiliga o‘zgartirildi!",
     language_selected: "Til tanlandi",
     not_joined:
@@ -168,17 +168,30 @@ bot.action(/lang_(en|ru|uz)/, async (ctx) => {
 
   if (!joined) {
     // Update message to show join button
-    await ctx.editMessageText(t(userId, "join_required"), {
-      reply_markup: getJoinKeyboard(userId).reply_markup
-    });
+    try {
+      await ctx.editMessageText(t(userId, "join_required"), {
+        reply_markup: getJoinKeyboard(userId).reply_markup
+      });
+    } catch (error) {
+      // If can't edit, send new message
+      await ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
+    }
     return;
   }
 
   // If already joined, show main menu
-  await ctx.editMessageText(t(userId, "help"), {
-    parse_mode: "Markdown",
-    reply_markup: getMainMenuKeyboard(userId).reply_markup
-  });
+  try {
+    await ctx.editMessageText(t(userId, "help"), {
+      parse_mode: "Markdown",
+      reply_markup: getMainMenuKeyboard(userId).reply_markup
+    });
+  } catch (error) {
+    // If can't edit, send new message
+    await ctx.reply(t(userId, "help"), {
+      parse_mode: "Markdown",
+      ...getMainMenuKeyboard(userId),
+    });
+  }
 });
 
 // 🔁 Check join button handler
@@ -189,10 +202,18 @@ bot.action("check_join", async (ctx) => {
   if (joined) {
     await ctx.answerCbQuery(t(userId, "joined_success"));
     // Update message to show main menu
-    await ctx.editMessageText(t(userId, "help"), {
-      parse_mode: "Markdown",
-      reply_markup: getMainMenuKeyboard(userId).reply_markup
-    });
+    try {
+      await ctx.editMessageText(t(userId, "help"), {
+        parse_mode: "Markdown",
+        reply_markup: getMainMenuKeyboard(userId).reply_markup
+      });
+    } catch (error) {
+      // If can't edit, send new message
+      await ctx.reply(t(userId, "help"), {
+        parse_mode: "Markdown",
+        ...getMainMenuKeyboard(userId),
+      });
+    }
   } else {
     await ctx.answerCbQuery(t(userId, "not_joined"), { show_alert: true });
   }
@@ -206,44 +227,74 @@ bot.action("main_menu", async (ctx) => {
   const joined = await isJoined(ctx);
   
   if (!joined) {
-    await ctx.editMessageText(t(userId, "join_required"), {
-      reply_markup: getJoinKeyboard(userId).reply_markup
-    });
+    try {
+      await ctx.editMessageText(t(userId, "join_required"), {
+        reply_markup: getJoinKeyboard(userId).reply_markup
+      });
+    } catch (error) {
+      await ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
+    }
     return;
   }
   
-  await ctx.editMessageText(t(userId, "help"), {
-    parse_mode: "Markdown",
-    reply_markup: getMainMenuKeyboard(userId).reply_markup
-  });
+  try {
+    await ctx.editMessageText(t(userId, "help"), {
+      parse_mode: "Markdown",
+      reply_markup: getMainMenuKeyboard(userId).reply_markup
+    });
+  } catch (error) {
+    await ctx.reply(t(userId, "help"), {
+      parse_mode: "Markdown",
+      ...getMainMenuKeyboard(userId),
+    });
+  }
 });
 
 // Show language menu
 bot.action("show_language", async (ctx) => {
   const userId = ctx.from.id;
   await ctx.answerCbQuery();
-  await ctx.editMessageText("🌍 " + t(userId, "language_button") + ":", {
-    reply_markup: getLanguageKeyboard().reply_markup
-  });
+  
+  try {
+    await ctx.editMessageText("🌍 " + t(userId, "language_button") + ":", {
+      reply_markup: getLanguageKeyboard().reply_markup
+    });
+  } catch (error) {
+    await ctx.reply("🌍 " + t(userId, "language_button") + ":", getLanguageKeyboard());
+  }
 });
 
 // Show premium menu
 bot.action("show_premium", async (ctx) => {
   const userId = ctx.from.id;
   await ctx.answerCbQuery();
-  await ctx.editMessageText("🔓 " + t(userId, "payment_button") + ":", {
-    reply_markup: getPaymentKeyboard(userId).reply_markup
-  });
+  
+  try {
+    await ctx.editMessageText("🔓 " + t(userId, "payment_button") + ":", {
+      reply_markup: getPaymentKeyboard(userId).reply_markup
+    });
+  } catch (error) {
+    await ctx.reply("🔓 " + t(userId, "payment_button") + ":", getPaymentKeyboard(userId));
+  }
 });
 
 // Show help
 bot.action("show_help", async (ctx) => {
   const userId = ctx.from.id;
   await ctx.answerCbQuery();
-  await ctx.editMessageText(t(userId, "help"), {
-    parse_mode: "Markdown",
-    reply_markup: getMainMenuKeyboard(userId).reply_markup
-  });
+  
+  try {
+    await ctx.editMessageText(t(userId, "help"), {
+      parse_mode: "Markdown",
+      reply_markup: getMainMenuKeyboard(userId).reply_markup
+    });
+  } catch (error) {
+    // If can't edit the message (e.g., it's a new message), send a new one
+    await ctx.reply(t(userId, "help"), {
+      parse_mode: "Markdown",
+      ...getMainMenuKeyboard(userId),
+    });
+  }
 });
 
 // 💳 Premium command - kept for compatibility but shows menu
