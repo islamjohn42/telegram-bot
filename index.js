@@ -11,48 +11,46 @@ const users = {};
 const texts = {
   en: {
     start: "Welcome! Please choose your language:",
-    already_joined: "✅ You are now a member!",
-    join_required: "❌ Please join our channel first to use this bot!",
-    joined_success: "✅ Thank you for joining!",
-    check_button: "✅ Check Membership",
+    now_can_use: "✅ You can now use the bot!",
+    join_required: "❌ Please join our channel first!",
+    joined_success: "✅ You have successfully joined!",
+    check_button: "✅ I Joined",
     join_button: "📢 Join Channel",
-    payment_button: "💳 Get Premium Access",
+    payment_button: "💳 Buy Premium Access",
     payment_link: "https://islamjohn42.github.io/hujayoroff/",
-    premium_not_available: "Premium features are currently not available",
-    help: "Available commands:\n/start - Start the bot\n/language - Change language\n/help - Show this help message",
+    help: "Available commands:\n/start - Restart bot\n/language - Change language\n/premium - Get premium access\n/help - Show this help",
     language_changed: "✅ Language changed to English!",
     language_selected: "Language selected",
-    not_joined: "❌ You haven't joined the channel yet!",
+    not_joined: "❌ You haven't joined the channel yet. Please join first!",
   },
   ru: {
     start: "Добро пожаловать! Пожалуйста, выберите язык:",
-    already_joined: "✅ Вы теперь участник!",
+    now_can_use: "✅ Теперь вы можете пользоваться ботом!",
     join_required: "❌ Пожалуйста, сначала подпишитесь на наш канал!",
-    joined_success: "✅ Спасибо за подписку!",
-    check_button: "✅ Проверить подписку",
-    join_button: "📢 Подписаться",
-    payment_button: "💳 Получить Premium доступ",
+    joined_success: "✅ Вы успешно подписались!",
+    check_button: "✅ Я подписался",
+    join_button: "📢 Подписаться на канал",
+    payment_button: "💳 Купить Premium доступ",
     payment_link: "https://islamjohn42.github.io/hujayoroff/",
-    premium_not_available: "Премиум функции временно недоступны",
-    help: "Доступные команды:\n/start - Запустить бота\n/language - Сменить язык\n/help - Показать это сообщение",
+    help: "Доступные команды:\n/start - Перезапустить бота\n/language - Сменить язык\n/premium - Получить premium доступ\n/help - Показать помощь",
     language_changed: "✅ Язык изменен на Русский!",
     language_selected: "Язык выбран",
-    not_joined: "❌ Вы еще не подписались на канал!",
+    not_joined: "❌ Вы еще не подписались на канал. Пожалуйста, подпишитесь!",
   },
   uz: {
     start: "Xush kelibsiz! Iltimos, tilni tanlang:",
-    already_joined: "✅ Siz endi a'zosiz!",
+    now_can_use: "✅ Endi botdan foydalanishingiz mumkin!",
     join_required: "❌ Iltimos, avval kanalga obuna bo‘ling!",
-    joined_success: "✅ Obuna bo‘lganingiz uchun rahmat!",
-    check_button: "✅ Obunani tekshirish",
+    joined_success: "✅ Siz muvaffaqiyatli obuna bo‘ldingiz!",
+    check_button: "✅ Obuna bo‘ldim",
     join_button: "📢 Kanalga obuna bo‘lish",
     payment_button: "💳 Premium a'zolik olish",
     payment_link: "https://islamjohn42.github.io/hujayoroff/",
-    premium_not_available: "Premium funksiyalar hozircha mavjud emas",
-    help: "Mavjud buyruqlar:\n/start - Botni ishga tushirish\n/language - Tilni o‘zgartirish\n/help - Yordam xabarini ko‘rsatish",
+    help: "Mavjud buyruqlar:\n/start - Botni qayta ishga tushirish\n/language - Tilni o‘zgartirish\n/premium - Premium a'zolik olish\n/help - Yordam",
     language_changed: "✅ Til O‘zbek tiliga o‘zgartirildi!",
     language_selected: "Til tanlandi",
-    not_joined: "❌ Siz hali kanalga obuna bo‘lmagansiz!",
+    not_joined:
+      "❌ Siz hali kanalga obuna bo‘lmagansiz. Iltimos, avval obuna bo‘ling!",
   },
 };
 
@@ -73,44 +71,34 @@ async function isJoined(ctx) {
   }
 }
 
-// Show payment button to user
+// Show payment button
 function getPaymentKeyboard(userId) {
   return Markup.inlineKeyboard([
     [Markup.button.url(t(userId, "payment_button"), t(userId, "payment_link"))],
   ]);
 }
 
-// 🔒 Middleware to check membership for protected commands
-async function requireJoin(ctx, next) {
-  const joined = await isJoined(ctx);
-
-  if (!joined) {
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.url(
-          t(ctx.from.id, "join_button"),
-          `https://t.me/${CHANNEL.replace("@", "")}`,
-        ),
-      ],
-      [Markup.button.callback(t(ctx.from.id, "check_button"), "check_join")],
-    ]);
-
-    await ctx.reply(t(ctx.from.id, "join_required"), keyboard);
-    return;
-  }
-
-  return next();
+// Show join channel keyboard
+function getJoinKeyboard(userId) {
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.url(
+        t(userId, "join_button"),
+        `https://t.me/${CHANNEL.replace("@", "")}`,
+      ),
+    ],
+    [Markup.button.callback(t(userId, "check_button"), "check_join")],
+  ]);
 }
 
-// 🚀 START command
+// 🚀 START command - exact flow
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
 
-  // Check if user already has a language set
+  // Step 1: Always show language selection first
   if (!users[userId]) {
-    // Show language selection if no language is set
     return ctx.reply(
-      "🌍 Choose your language / Tilni tanlang / Выберите язык:",
+      "🌍 " + texts.en.start + "\n\n🇺🇿 Tilni tanlang\n🇷🇺 Выберите язык",
       Markup.inlineKeyboard([
         [Markup.button.callback("🇺🇸 English", "lang_en")],
         [Markup.button.callback("🇷🇺 Русский", "lang_ru")],
@@ -119,26 +107,20 @@ bot.start(async (ctx) => {
     );
   }
 
-  // User has language set, check membership
+  // Step 2: After language selected, check channel membership
   const joined = await isJoined(ctx);
 
   if (!joined) {
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.url(
-          t(userId, "join_button"),
-          `https://t.me/${CHANNEL.replace("@", "")}`,
-        ),
-      ],
-      [Markup.button.callback(t(userId, "check_button"), "check_join")],
-    ]);
-
-    return ctx.reply(t(userId, "join_required"), keyboard);
+    // Show join button if not joined
+    return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
   }
 
-  // User is joined, show welcome message with payment button
-  await ctx.reply(t(userId, "already_joined"));
-  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
+  // Step 3: If joined, show "now you can use" message and payment button
+  await ctx.reply(t(userId, "now_can_use"));
+  await ctx.reply(
+    "🔓 " + t(userId, "payment_button") + ":",
+    getPaymentKeyboard(userId),
+  );
   await ctx.reply(t(userId, "help"));
 });
 
@@ -152,26 +134,21 @@ bot.action(/lang_(en|ru|uz)/, async (ctx) => {
 
   await ctx.answerCbQuery(t(userId, "language_selected"));
 
-  // Check membership after language selection
+  // After language selection, check membership
   const joined = await isJoined(ctx);
 
   if (!joined) {
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.url(
-          t(userId, "join_button"),
-          `https://t.me/${CHANNEL.replace("@", "")}`,
-        ),
-      ],
-      [Markup.button.callback(t(userId, "check_button"), "check_join")],
-    ]);
-
-    return ctx.reply(t(userId, "join_required"), keyboard);
+    // Show join button if not joined
+    return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
   }
 
-  await ctx.reply(t(userId, "language_changed"));
-  await ctx.reply(t(userId, "already_joined"));
-  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
+  // If already joined, show success message and payment button
+  await ctx.reply(t(userId, "now_can_use"));
+  await ctx.reply(
+    "🔓 " + t(userId, "payment_button") + ":",
+    getPaymentKeyboard(userId),
+  );
+  await ctx.reply(t(userId, "help"));
 });
 
 // 🔁 Check join button handler
@@ -181,9 +158,12 @@ bot.action("check_join", async (ctx) => {
 
   if (joined) {
     await ctx.answerCbQuery(t(userId, "joined_success"));
-    await ctx.reply(t(userId, "joined_success"));
-    // After successful join, show payment button immediately
-    await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
+    // Show "now you can use" message and payment button
+    await ctx.reply(t(userId, "now_can_use"));
+    await ctx.reply(
+      "🔓 " + t(userId, "payment_button") + ":",
+      getPaymentKeyboard(userId),
+    );
     await ctx.reply(t(userId, "help"));
   } else {
     await ctx.answerCbQuery(t(userId, "not_joined"), { show_alert: true });
@@ -192,6 +172,7 @@ bot.action("check_join", async (ctx) => {
 
 // 📝 Language command to change language anytime
 bot.command("language", async (ctx) => {
+  const userId = ctx.from.id;
   await ctx.reply(
     "🌍 Choose your language / Tilni tanlang / Выберите язык:",
     Markup.inlineKeyboard([
@@ -202,46 +183,45 @@ bot.command("language", async (ctx) => {
   );
 });
 
-// ℹ️ Help command
-bot.command("help", requireJoin, async (ctx) => {
-  const userId = ctx.from.id;
-  await ctx.reply(t(userId, "help"));
-  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
-});
-
-// 💳 Payment command - shows the payment link button
-bot.command("premium", requireJoin, async (ctx) => {
-  const userId = ctx.from.id;
-  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
-});
-
-// 🏠 Home/Start alias
-bot.command("home", async (ctx) => {
+// 💳 Premium command - shows payment button directly (checks membership first)
+bot.command("premium", async (ctx) => {
   const userId = ctx.from.id;
 
   if (!users[userId]) {
-    return bot.telegram.sendMessage(ctx.chat.id, "Please use /start to begin");
+    return ctx.reply("Please use /start first to set your language.");
   }
 
   const joined = await isJoined(ctx);
 
   if (!joined) {
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.url(
-          t(userId, "join_button"),
-          `https://t.me/${CHANNEL.replace("@", "")}`,
-        ),
-      ],
-      [Markup.button.callback(t(userId, "check_button"), "check_join")],
-    ]);
-
-    return ctx.reply(t(userId, "join_required"), keyboard);
+    return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
   }
 
-  await ctx.reply(t(userId, "already_joined"));
-  await ctx.reply("🔓 Choose your plan:", getPaymentKeyboard(userId));
+  await ctx.reply(
+    "🔓 " + t(userId, "payment_button") + ":",
+    getPaymentKeyboard(userId),
+  );
+});
+
+// ℹ️ Help command
+bot.command("help", async (ctx) => {
+  const userId = ctx.from.id;
+
+  if (!users[userId]) {
+    return ctx.reply("Please use /start first to set your language.");
+  }
+
+  const joined = await isJoined(ctx);
+
+  if (!joined) {
+    return ctx.reply(t(userId, "join_required"), getJoinKeyboard(userId));
+  }
+
   await ctx.reply(t(userId, "help"));
+  await ctx.reply(
+    "🔓 " + t(userId, "payment_button") + ":",
+    getPaymentKeyboard(userId),
+  );
 });
 
 // Error handling
